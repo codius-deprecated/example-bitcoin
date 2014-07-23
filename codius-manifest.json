@@ -1,0 +1,10 @@
+{
+  "name": "example-bitcoin",
+  "apis": [
+    "fs"
+  ],
+  "main": "contract.js",
+  "modules": [
+    "bitcoinjs"
+  ]
+}
