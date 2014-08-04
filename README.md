@@ -13,5 +13,5 @@ To try this example contract, run:
 ``` sh
 git clone https://github.com/codius/example-bitcoin.git codius-example-bitcoin
 cd codius-example-bitcoin
-codius run
+echo <bitcoin tx as hex> | codius run
 ```

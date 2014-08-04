@@ -1,15 +1,41 @@
-console.log('example-bitcoin');
+console.log('\nExample Bitcoin Contract');
 
-var Bitcoin = require('bitcoinjs');
+var crypto     = require('crypto');
+var Bitcoin    = require('bitcoinjs-lib');
+var BigInteger = require('bigi');
+var Promise    = require('bluebird');
+var secrets    = Promise.promisifyAll(require('secrets'));
+var input      = Promise.promisifyAll(require('input'));
 
-var key = Bitcoin.ECKey.fromWIF('5J5CvkZJiw5H1WdRx52ZtysSmaRrKmUN4NXKWkXwx8zaAvpgMEB');
+function getBitcoinTransaction(){
+  return input.getAsync()
+    .then(function(data){
+      return Bitcoin.Transaction.fromHex(data);
+    }).catch(function(error){
+      console.log('Invalid Bitcoin Transaction. ' + error);
+    });
+}
 
-var tx = new Bitcoin.Transaction();
+function getMyKeypair(){
+  return secrets.getKeypairAsync('ec_secp256k1');
+}
 
-tx.addInput("aa94ab02c182214f090e99a0d57021caffd0f195a81c24602b1028b130b63e31", 0);
+Promise.join(getBitcoinTransaction(), getMyKeypair())
+  .spread(function(tx, keypair){
+    var key = new Bitcoin.ECKey(new BigInteger(keypair.private, 16), false);
+    var signature = tx.sign(0, key);
+    return {
+      public_key: keypair.public,
+      tx_signature: signature,
+      host_signature: keypair.signature
+    };
+  })
+  .catch(function(error){
+    console.log('Error signing bitcoin transaction: ' + error);
+  })
+  .then(function(result){
+    if (result) {
+      console.log(JSON.stringify(result));
+    }
+  });
 
-tx.addOutput("1Gokm82v6DmtwKEB8AiVhm82hyFSsEvBDK", 15000);
-
-tx.sign(0, key);
-
-console.log(tx.toHex());
